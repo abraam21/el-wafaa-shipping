@@ -8,7 +8,7 @@ const https = require('https');
 // ===========================================
 const SHIPPO_API_KEY = process.env.SHIPPO_API_KEY || '';
 const PRINTNODE_API_KEY = process.env.PRINTNODE_API_KEY || '';
-const PRINTNODE_PRINTER_ID = parseInt(process.env.PRINTNODE_PRINTER_ID) || 0;
+const PRINTNODE_PRINTER_ID = parseInt(process.env.PRINTNODE_PRINTER_ID) || 75048303;
 
 const ORIGIN_ADDRESS = {
     name: 'Wafaa Demian',
