@@ -22,6 +22,10 @@ const ORIGIN_ADDRESS = {
 
 const PORT = process.env.PORT || 3000;
 
+// Store completed orders (in production, use a database)
+// Key: package ID (pkg param), Value: order details
+const completedOrders = new Map();
+
 const MIME_TYPES = {
     '.html': 'text/html',
     '.css': 'text/css',
@@ -315,6 +319,21 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // API: Check if order already exists
+    if (req.url.startsWith('/api/order/') && req.method === 'GET') {
+        const pkgId = decodeURIComponent(req.url.replace('/api/order/', ''));
+        const existingOrder = completedOrders.get(pkgId);
+
+        if (existingOrder) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ exists: true, order: existingOrder }));
+        } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ exists: false }));
+        }
+        return;
+    }
+
     // API: Get shipping rates
     if (req.url === '/api/rates' && req.method === 'POST') {
         let body = '';
@@ -341,7 +360,14 @@ const server = http.createServer(async (req, res) => {
         req.on('data', chunk => body += chunk);
         req.on('end', async () => {
             try {
-                const { package_rates, packages, destination } = JSON.parse(body);
+                const { package_rates, packages, destination, pkgId, selectedRate } = JSON.parse(body);
+
+                // Check if order already exists
+                if (pkgId && completedOrders.has(pkgId)) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'This order has already been completed' }));
+                    return;
+                }
 
                 // Purchase a label for each package
                 const labelResults = await purchaseAllLabels(package_rates);
@@ -354,6 +380,19 @@ const server = http.createServer(async (req, res) => {
 
                 // Log order details for reference
                 logOrderDetails(destination, labelResults, packages);
+
+                // Store completed order to prevent duplicates
+                if (pkgId) {
+                    const orderData = {
+                        method: selectedRate ? `${selectedRate.provider} - ${selectedRate.servicelevel.name}` : 'N/A',
+                        delivery: selectedRate ? `${selectedRate.estimated_days || 'N/A'} business days` : 'N/A',
+                        total: selectedRate ? `$${parseFloat(selectedRate.amount).toFixed(2)}` : 'N/A',
+                        labels: labelResults,
+                        completed_at: new Date().toISOString()
+                    };
+                    completedOrders.set(pkgId, orderData);
+                    console.log(`Order stored for pkgId: ${pkgId}`);
+                }
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
