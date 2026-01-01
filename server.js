@@ -285,6 +285,168 @@ async function printLabels(labelUrls, customerName) {
     }
 }
 
+// Generate packing slip HTML
+function generatePackingSlipHTML(destination, packages, labelResults, selectedRate) {
+    const date = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    const trackingNumbers = labelResults.map((l, i) =>
+        `<div style="margin: 4px 0;">Package ${i + 1}: <strong>${l.tracking_number}</strong></div>`
+    ).join('');
+
+    const packageList = packages.map((pkg, i) =>
+        `<tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${i + 1}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${pkg.description || 'Clothing'}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${pkg.length}" x ${pkg.width}" x ${pkg.height}"</td>
+            <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${pkg.weight} lbs</td>
+        </tr>`
+    ).join('');
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 40px; max-width: 8.5in; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #6941C6; padding-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: bold; color: #6941C6; }
+        .date { color: #666; font-size: 14px; }
+        .title { font-size: 28px; font-weight: bold; text-align: center; margin-bottom: 30px; color: #111927; }
+        .section { margin-bottom: 24px; }
+        .section-title { font-size: 14px; font-weight: bold; color: #6941C6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .address-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
+        .address-row { display: flex; gap: 40px; }
+        .address-col { flex: 1; }
+        .customer-name { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+        .address-line { color: #4d5761; line-height: 1.6; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th { background: #f3f4f6; padding: 10px 8px; text-align: left; font-size: 12px; font-weight: 600; color: #384250; text-transform: uppercase; }
+        td { padding: 8px; color: #4d5761; }
+        .tracking-box { background: #ecfdf3; border: 1px solid #12b76a; border-radius: 8px; padding: 16px; margin-top: 24px; }
+        .tracking-title { font-weight: bold; color: #027a48; margin-bottom: 8px; }
+        .shipping-method { background: #f4f3ff; border: 1px solid #d9d6fe; border-radius: 8px; padding: 16px; margin-top: 16px; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #9da4ae; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">El Wafaa Shipping</div>
+        <div class="date">${date}</div>
+    </div>
+
+    <div class="title">PACKING SLIP</div>
+
+    <div class="section">
+        <div class="address-row">
+            <div class="address-col">
+                <div class="section-title">Ship From</div>
+                <div class="address-box">
+                    <div class="customer-name">${ORIGIN_ADDRESS.name}</div>
+                    <div class="address-line">
+                        ${ORIGIN_ADDRESS.street1}<br>
+                        ${ORIGIN_ADDRESS.city}, ${ORIGIN_ADDRESS.state} ${ORIGIN_ADDRESS.zip}
+                    </div>
+                </div>
+            </div>
+            <div class="address-col">
+                <div class="section-title">Ship To</div>
+                <div class="address-box">
+                    <div class="customer-name">${destination.name}</div>
+                    <div class="address-line">
+                        ${destination.street}${destination.street2 ? '<br>' + destination.street2 : ''}<br>
+                        ${destination.city}, ${destination.state} ${destination.zip}<br>
+                        ${destination.phone ? 'Phone: ' + destination.phone : ''}
+                        ${destination.email ? '<br>Email: ' + destination.email : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Package Contents</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60px;">#</th>
+                    <th>Description</th>
+                    <th style="width: 150px;">Dimensions</th>
+                    <th style="width: 100px;">Weight</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${packageList}
+            </tbody>
+        </table>
+    </div>
+
+    ${selectedRate ? `
+    <div class="shipping-method">
+        <div class="section-title" style="margin-bottom: 4px;">Shipping Method</div>
+        <div style="font-size: 16px; font-weight: 500;">${selectedRate.provider} - ${selectedRate.servicelevel?.name || ''}</div>
+        <div style="color: #6c737f; font-size: 14px;">Estimated delivery: ${selectedRate.estimated_days || 'N/A'} business days</div>
+    </div>
+    ` : ''}
+
+    <div class="tracking-box">
+        <div class="tracking-title">Tracking Information</div>
+        ${trackingNumbers}
+    </div>
+
+    <div class="footer">
+        Thank you for your business!<br>
+        El Wafaa Shipping &bull; ${ORIGIN_ADDRESS.street1}, ${ORIGIN_ADDRESS.city}, ${ORIGIN_ADDRESS.state} ${ORIGIN_ADDRESS.zip}
+    </div>
+</body>
+</html>`;
+}
+
+// Print packing slip via PrintNode
+async function printPackingSlip(destination, packages, labelResults, selectedRate) {
+    console.log('\n========== PRINTING PACKING SLIP ==========');
+
+    if (PRINTNODE_API_KEY === 'YOUR_PRINTNODE_API_KEY' || PRINTNODE_PRINTER_ID === 0) {
+        console.log('PrintNode not configured - skipping packing slip print');
+        console.log('==========================================\n');
+        return false;
+    }
+
+    try {
+        const html = generatePackingSlipHTML(destination, packages, labelResults, selectedRate);
+        const base64Html = Buffer.from(html).toString('base64');
+
+        const printJob = {
+            printerId: PRINTNODE_PRINTER_ID,
+            title: `Packing Slip - ${destination.name}`,
+            contentType: 'raw_base64',
+            content: base64Html,
+            source: 'El Wafaa Shipping'
+        };
+
+        const result = await printNodeRequest('/printjobs', 'POST', printJob);
+
+        if (result.status === 201) {
+            console.log(`Packing slip sent! Job ID: ${result.data}`);
+            console.log('==========================================\n');
+            return true;
+        } else {
+            console.error('Failed to print packing slip:', result.data);
+            console.log('==========================================\n');
+            return false;
+        }
+    } catch (error) {
+        console.error('Packing slip print error:', error.message);
+        console.log('==========================================\n');
+        return false;
+    }
+}
+
 // Log order details for reference
 function logOrderDetails(destination, labelResults, packages) {
     const trackingList = labelResults.map((l, i) =>
@@ -377,6 +539,9 @@ const server = http.createServer(async (req, res) => {
                     labelResults.map(l => l.label_url),
                     destination.name
                 );
+
+                // Print packing slip via PrintNode
+                printPackingSlip(destination, packages, labelResults, selectedRate);
 
                 // Log order details for reference
                 logOrderDetails(destination, labelResults, packages);
