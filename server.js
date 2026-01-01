@@ -389,8 +389,13 @@ function generatePackingSlipHTML(destination, packages, labelResults, selectedRa
     ${selectedRate ? `
     <div class="shipping-method">
         <div class="section-title" style="margin-bottom: 4px;">Shipping Method</div>
-        <div style="font-size: 16px; font-weight: 500;">${selectedRate.provider} - ${selectedRate.servicelevel?.name || ''}</div>
-        <div style="color: #6c737f; font-size: 14px;">Estimated delivery: ${selectedRate.estimated_days || 'N/A'} business days</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 16px; font-weight: 500;">${selectedRate.provider} - ${selectedRate.servicelevel?.name || ''}</div>
+                <div style="color: #6c737f; font-size: 14px;">Estimated delivery: ${selectedRate.estimated_days || 'N/A'} business days</div>
+            </div>
+            <div style="font-size: 24px; font-weight: bold; color: #027a48;">$${parseFloat(selectedRate.amount).toFixed(2)}</div>
+        </div>
     </div>
     ` : ''}
 
