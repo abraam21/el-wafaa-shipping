@@ -540,7 +540,7 @@ const server = http.createServer(async (req, res) => {
                     destination.name
                 );
 
-                // Print packing slip via PrintNode
+                // Print packing slip with customer info via PrintNode
                 printPackingSlip(destination, packages, labelResults, selectedRate);
 
                 // Log order details for reference
