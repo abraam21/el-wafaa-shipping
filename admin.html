@@ -207,6 +207,16 @@
             background: var(--gray-50);
         }
 
+        .btn-success {
+            background: var(--success-600);
+            color: #FFFFFF;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .btn-success:hover {
+            background: var(--success-700);
+        }
+
         .package-entry {
             background: var(--gray-50);
             border: 1px solid var(--gray-200);
@@ -359,7 +369,7 @@
 
                 <button type="button" class="btn btn-add" onclick="addPackage()">+ Add Another Package</button>
                 <button type="submit" class="btn btn-primary">Generate Customer Link</button>
-                <button type="button" class="btn btn-secondary" style="margin-top: 12px;" onclick="createLabelDirect()">Create Label Directly</button>
+                <button type="button" class="btn btn-success" style="margin-top: 12px;" onclick="createLabelDirect()">Create Label Directly</button>
             </form>
 
             <div class="result-section" id="resultSection">
