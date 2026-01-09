@@ -11,7 +11,7 @@ const PRINTNODE_API_KEY = process.env.PRINTNODE_API_KEY || '';
 const PRINTNODE_PRINTER_ID = parseInt(process.env.PRINTNODE_PRINTER_ID) || 75048303;
 
 const ORIGIN_ADDRESS = {
-    name: 'Wafaa Demian',
+    name: 'Wafaa Tawfik',
     street1: '90 W 22nd St',
     city: 'Bayonne',
     state: 'NJ',
