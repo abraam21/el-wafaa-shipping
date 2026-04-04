@@ -17,7 +17,8 @@ const ORIGIN_ADDRESS = {
     state: 'NJ',
     zip: '07002',
     country: 'US',
-    email: 'abraamtawfik@gmail.com'
+    email: 'abraamtawfik@gmail.com',
+    phone: '8482926767'
 };
 // ===========================================
 
