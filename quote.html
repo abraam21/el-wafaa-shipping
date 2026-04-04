@@ -266,6 +266,28 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Google Places Autocomplete styling */
+        .pac-container {
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-lg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin-top: 4px;
+        }
+        .pac-item {
+            padding: 8px 14px;
+            font-size: 14px;
+            color: var(--gray-700);
+            cursor: pointer;
+            border-top: 1px solid var(--gray-100);
+        }
+        .pac-item:first-child { border-top: none; }
+        .pac-item:hover { background: var(--gray-50); }
+        .pac-item-selected { background: var(--primary-50); }
+        .pac-item-query { font-size: 14px; color: var(--gray-900); font-weight: 500; }
+        .pac-icon { display: none; }
+        .pac-item span { font-size: 13px; }
+
         @media (max-width: 480px) {
             .row-3 { grid-template-columns: 1fr; }
             .row-2 { grid-template-columns: 1fr; }
@@ -385,6 +407,42 @@
     </div>
 
     <script>
+        // Google Places Autocomplete
+        function initAutocomplete() {
+            const streetInput = document.getElementById('street');
+            const autocomplete = new google.maps.places.Autocomplete(streetInput, {
+                componentRestrictions: { country: 'us' },
+                fields: ['address_components'],
+                types: ['address']
+            });
+
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                if (!place.address_components) return;
+
+                let streetNumber = '';
+                let route = '';
+                let city = '';
+                let state = '';
+                let zip = '';
+
+                for (const component of place.address_components) {
+                    const type = component.types[0];
+                    if (type === 'street_number') streetNumber = component.long_name;
+                    if (type === 'route') route = component.long_name;
+                    if (type === 'locality') city = component.long_name;
+                    if (type === 'sublocality_level_1' && !city) city = component.long_name;
+                    if (type === 'administrative_area_level_1') state = component.short_name;
+                    if (type === 'postal_code') zip = component.long_name;
+                }
+
+                streetInput.value = (streetNumber + ' ' + route).trim();
+                document.getElementById('city').value = city;
+                document.getElementById('state').value = state;
+                document.getElementById('zip').value = zip;
+            });
+        }
+
         // API URL - Change this to your deployed API server URL
         // For local development: '' (empty string uses same origin)
         // For production: 'https://el-wafaa-shipping.onrender.com' or similar
@@ -481,7 +539,7 @@
                 state: document.getElementById('state').value.toUpperCase(),
                 zip: document.getElementById('zip').value,
                 phone: document.getElementById('phone').value || '848-292-6767',
-                email: document.getElementById('email').value || ''
+                email: document.getElementById('email').value || 'abraamtawfik@gmail.com'
             };
 
             try {
@@ -606,5 +664,6 @@
             }
         }
     </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAAMtekEN7pZI4tsvgqPwg92V5iIFIdxsY&libraries=places&callback=initAutocomplete" async defer></script>
 </body>
 </html>

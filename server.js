@@ -16,7 +16,8 @@ const ORIGIN_ADDRESS = {
     city: 'Bayonne',
     state: 'NJ',
     zip: '07002',
-    country: 'US'
+    country: 'US',
+    email: 'abraamtawfik@gmail.com'
 };
 // ===========================================
 
@@ -77,8 +78,8 @@ async function getRatesForPackages(packages, destination) {
         state: destination.state,
         zip: destination.zip,
         country: 'US',
-        phone: destination.phone,
-        email: destination.email
+        phone: destination.phone || '',
+        email: destination.email || 'abraamtawfik@gmail.com'
     };
 
     // Create a shipment for each package to get individual rates
